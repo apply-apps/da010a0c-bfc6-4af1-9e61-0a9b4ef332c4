@@ -1,53 +1,84 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+// Filename: index.js
+// Combined code from all files
 
-const App = () => {
-  const fullText = 'Hi, this is Apply.\nCreating mobile apps is now as simple as typing text.\nJust input your idea and press APPLY, and our platform does the rest...';
-  const [displayedText, setDisplayedText] = useState('');
-  const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
-  useEffect(() => {
-    if (isPaused) return;
+const colors = ['red', 'blue', 'green', 'yellow'];
 
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + fullText[index]);
-      setIndex((prev) => {
-        if (prev === fullText.length - 1) {
-          setIsPaused(true);
-          setTimeout(() => {
-            setDisplayedText('');
-            setIndex(0);
-            setIsPaused(false);
-          }, 2000);
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [index, isPaused]);
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{displayedText}</Text>
-    </View>
-  );
+const ColorItem = ({ color, onPress, disabled }) => {
+    return (
+        <TouchableOpacity onPress={() => onPress(color)} disabled={disabled} style={{ opacity: disabled ? 0.3 : 1 }}>
+            <View style={[styles.colorItem, { backgroundColor: color }]} />
+        </TouchableOpacity>
+    );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'black',
-    padding: 20,
-  },
-  text: {
-    color: 'white',
-    fontSize: 24,
-    fontFamily: 'monospace',
-  },
-});
+export default function App() {
+    const [selectedColor, setSelectedColor] = useState(colors[0]);
+    const [collectedColors, setCollectedColors] = useState([]);
 
-export default App;
+    const handleColorSelect = (color) => {
+        if (color === selectedColor) {
+            setCollectedColors([...collectedColors, color]);
+            setSelectedColor(colors[collectedColors.length + 1] || 'done');
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Sort the Colors</Text>
+            {selectedColor !== 'done' ? (
+                <Text style={styles.currentColorText}>Select the {selectedColor} item</Text>
+            ) : (
+                <Text style={styles.successText}>All colors collected!</Text>
+            )}
+            <View style={styles.itemsContainer}>
+                {colors.map((color) => (
+                    <ColorItem
+                        key={color}
+                        color={color}
+                        onPress={handleColorSelect}
+                        disabled={collectedColors.includes(color)}
+                    />
+                ))}
+            </View>
+            {selectedColor === 'done' && <ConfettiCannon count={200} origin={{ x: -10, y: 0 }} />}
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginVertical: 20,
+    },
+    currentColorText: {
+        fontSize: 18,
+        marginBottom: 20,
+    },
+    successText: {
+        fontSize: 18,
+        marginBottom: 20,
+        color: 'green',
+    },
+    itemsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+    },
+    colorItem: {
+        width: 100,
+        height: 100,
+        margin: 10,
+        borderRadius: 10,
+    },
+});
